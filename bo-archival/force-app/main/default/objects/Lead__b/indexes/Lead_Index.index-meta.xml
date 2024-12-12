@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Index xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Lead_Index</fullName>
+    <fields>
+        <name>OwnerId__c</name>
+        <sortDirection>ASC</sortDirection>
+    </fields>
+    <fields>
+        <name>Id__c</name>
+        <sortDirection>ASC</sortDirection>
+    </fields>
+    <label>Lead Index</label>
+</Index>
