@@ -1,4 +1,6 @@
 /*
+@name: ExportUtility
+@description: Utility class to export data from Bulk API
 Depedency: Dataweaver script, following are th steps to deploy from Command CLI, VSCOde Deploy might not work
 sf project convert source --source-dir ./mdapi
 sf project deploy start --source-dir ./mdapi
@@ -298,6 +300,7 @@ public class ExportUtility implements Queueable, Database.AllowsCallouts {
             //set filter value   
             theFilter.setValue(this.batchExport.Job_Id__c);
 
+            //Report exporting to excel
             String instanceName = System.URL.getOrgDomainUrl().toExternalForm();
             String url = instanceName + '/servlet/PrintableViewDownloadServlet?isdtp=p1&reportId=' + theReport.Id + '&csv=1&enc=utf-8';
 
@@ -306,6 +309,7 @@ public class ExportUtility implements Queueable, Database.AllowsCallouts {
 
             string fileName = REPORTNAME + '.xlsx';
 
+            //Create File
             addLog('Creating File: ' + fileName);
 
             ContentVersion contentVersion = new ContentVersion();
@@ -317,6 +321,7 @@ public class ExportUtility implements Queueable, Database.AllowsCallouts {
 
             string contentDocumentId = [SELECT Id, ContentDocumentId FROM ContentVersion WHERE Id = :contentVersion.Id].ContentDocumentId;
 
+            //Link File to Record
             addLog('File created: ' + contentDocumentId);
 
             ContentDocumentLink contentDocumentLink = new ContentDocumentLink();
