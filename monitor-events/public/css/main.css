@@ -1,0 +1,167 @@
+:root {
+    --dx-g-purple-vibrant-100: #fcfcfc;
+    --dx-g-purple-vibrant-95: #f6f2fb;
+    --dx-g-purple-vibrant-90: #ece1f9;
+    --dx-g-purple-vibrant-80: #d7bff5;
+    --dx-g-purple-vibrant-70: #c29ef1;
+    --dx-g-purple-vibrant-65: #b78def;
+    --dx-g-purple-vibrant-60: #ad7bee;
+    --dx-g-purple-vibrant-50: #9050e9;
+    --dx-g-purple-vibrant-40: #7526e3;
+    --dx-g-purple-vibrant-30: #5a1ba9;
+    --dx-g-purple-vibrant-20: #401075;
+    --dx-g-purple-vibrant-10: #240643;
+}
+
+body {
+    font-family: Verdana, Geneva, Tahoma, sans-serif, Courier;
+    font-size: 9pt;
+}
+
+.container {
+    padding: 0;
+    max-width: 95% !important;
+    width: 95% !important;
+    text-align: justify;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+    font-family: Verdana, Geneva, Tahoma, sans-serif, Courier;
+    font-weight: bold;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+h1{
+    font-size: 200%;
+}
+.header {
+    padding: 5px;
+}
+
+#logo {
+    display: block;
+    width: 100px;
+    height: 100px;
+    background-image: url('/images/heroku-logo-solid-purple.png');
+    background-size:contain;
+    background-position: -20px -20px;
+    background-clip:content-box;
+    background-repeat: no-repeat;
+}
+#site-logo{
+    width: 60px;
+}
+#site-title{
+    font-size: 225%;
+    font-weight:bold;
+    color: var(--dx-g-purple-vibrant-20);
+    padding-top: 10px;
+    padding-left: 10px;
+}
+.accordion-body {
+    padding: 5px;
+}
+
+.tabulator {
+    font-size: 90%;
+}
+
+.tab-pane {
+    border-color: var(--bs-border-color);
+    border-width: 1px;
+    border-bottom-style: solid;
+    border-left-style: solid;
+    border-right-style: solid;
+    border-bottom-right-radius: var(--bs-border-radius);
+    border-bottom-left-radius: var(--bs-border-radius);
+    padding: 5px;
+}
+
+.tab-content>.active {
+    background-color: var(--dx-g-purple-vibrant-100);
+}
+
+.nav-tabs .nav-item.show .nav-link,
+.nav-tabs .nav-link.active {
+    background-color: var(--dx-g-purple-vibrant-100);
+    border-bottom-color: var(--dx-g-purple-vibrant-100);
+}
+
+#dvEvents {
+    height: 70vh;
+    border: solid 1px silver;
+    border-radius: var(--bs-border-radius);
+}
+
+.event {
+    font-size: 75%;
+    width: 30%;
+    height: 200px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    border: solid 1px silver;
+    border-radius: var(--bs-border-radius);
+}
+
+.footer {
+    font-size: 75%;
+    text-align: center;
+    color: var(--dx-g-purple-vibrant-10);
+    background-color: var(--dx-g-purple-vibrant-95);
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.footer a {
+    color: var(--dx-g-purple-vibrant-10);
+    text-decoration: none;
+}
+
+.content {
+    min-height: calc(100vh - 130px);
+}
+.form-group {
+    border-radius: var(--bs-border-radius);
+    border: solid 1px var(--bs-border-color);
+    padding: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+.form-group .alert{
+    font-weight: bold;
+    font-size: 125%;
+    padding: 10px;
+}
+.form-group .row {
+    border-bottom: solid 1px var(--bs-border-color);
+    padding-bottom: 10px;
+    padding-top: 10px;
+    margin-left: 1px;
+    margin-right: 1px;
+}
+.form-label{
+    font-weight: bold;
+    color: var(--dx-g-purple-vibrant-20);
+    margin-bottom: 0px;
+    padding-left: 2px;
+}
+.form-control {
+    font-family: inherit;
+    font-size: inherit;
+}
+.btn {
+    font-family: inherit;
+    font-size: inherit;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+.form-label.mand::after {
+    content: '*';
+    color: red;
+    padding-left: 2px;
+}

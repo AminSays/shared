@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Event Dashboards</title>
+    <meta name="msapplication-TileImage" content="/favicons/mstile-144x144.png">
+    <link rel="icon" href="https://connect.heroku.com/favicon.ico" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.6.3.min.js"
+        integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-color/2.1.2/jquery.color.min.js"
+        integrity="sha512-VjRpiWhUqdNa9bwBV7LnlG8CwsCVPenFyOQTSRTOGHw/tjtME96zthh0Vv9Itf3i8w4CkUrdYaS6+dAt1m1YXQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
+        crossorigin="anonymous"></script>
+    <script src="https://use.fontawesome.com/releases/v5.15.4/js/all.js"
+        integrity="sha384-rOA1PnstxnOBLzCLMcre8ybwbTmemjzdNlILg8O7z1lUkLXozs4DHonlDtnE7fpc"
+        crossorigin="anonymous"></script>
+    <link href="https://unpkg.com/tabulator-tables/dist/css/tabulator.min.css" rel="stylesheet">
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables/dist/js/tabulator.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.2.1/build/global/luxon.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+</head>
+
+<body>
+    <section class="header container-fluid d-flex flex-row align-items-stretch">
+        <img src="/images/heroku-logo-solid-purple.png" alt="Heroku" id="site-logo">
+        <span id="site-title">Event Monitoring - Custom Integration</span>
+    </section>
+    <section class="content container">
+        <nav>
+            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                <button class="nav-link active" id="nav-trail-tab" data-bs-toggle="tab" data-bs-target="#nav-trail"
+                    type="button" role="tab" aria-controls="nav-trail" aria-selected="true">Setup Audit Trail</button>
+                <button class="nav-link" id="nav-logins-tab" data-bs-toggle="tab" data-bs-target="#nav-logins"
+                    type="button" role="tab" aria-controls="nav-logins" aria-selected="true">Login History</button>
+                <button class="nav-link" id="nav-log-tab" data-bs-toggle="tab" data-bs-target="#nav-log" type="button"
+                    role="tab" aria-controls="nav-log" aria-selected="false">Event Logs</button>
+                <button class="nav-link" id="nav-event-tab" data-bs-toggle="tab" data-bs-target="#nav-event"
+                    type="button" role="tab" aria-controls="nav-event" aria-selected="false">Real-Time Events</button>
+            </div>
+        </nav>
+        <div class="tab-content" id="nav-tabContent">
+            <div class="tab-pane fade show active text-end" id="nav-trail" role="tabpanel"
+                aria-labelledby="nav-trail-tab">
+                <button type="button" class="btn btn-primary m-1" onclick="refreshTrail();"><i
+                        class="fa fa-undo"></i></button>
+                <div id="dvTrail"></div>
+            </div>
+            <div class="tab-pane fade text-end" id="nav-logins" role="tabpanel" aria-labelledby="nav-logins-tab">
+                <button type="button" class="btn btn-primary m-1" onclick="refreshLogins();"><i
+                        class="fa fa-undo"></i></button>
+                <div id="dvLogins"></div>
+            </div>
+            <div class="tab-pane fade text-end" id="nav-log" role="tabpanel" aria-labelledby="nav-log-tab">
+                <button type="button" class="btn btn-primary m-1" onclick="refreshLogs();"><i
+                        class="fa fa-undo"></i></button>
+                <div id="dvLogs"></div>
+            </div>
+            <div class="tab-pane fade" id="nav-event" role="tabpanel" aria-labelledby="nav-event-tab">
+                <div class="row">
+                    <div class="col-md-4 pb-1">
+                        <button type="button" class="btn btn-primary m-3" onclick="subscribeEvents();"><i
+                                class="fa fa-play"></i> Subscribe</button>
+                        <button type="button" class="btn btn-warning m-3" onclick="unSubscribeEvents();"><i
+                                class="fa fa-stop"></i> Unsubscribe</button>
+                    </div>
+                    <div class="col-md-8">
+                        <div id="dvMsg" class="alert alert-primary text-center" role="alert">
+
+                        </div>
+                    </div>
+                </div>
+                <div id="dvEvents" class="d-flex p-2 flex-wrap justify-content-around overflow-auto">
+
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="footer mt-4">
+        © 2023 <a href="https://www.salesforce.com/" title="salesforce.com"> Salesforce.com</a> |
+        <a href="https://www.heroku.com/" title="heroku.com">heroku.com</a>
+    </section>
+
+    <script type="text/javascript">
+        var timer, hider;
+        var events = [];
+        var tblEvent;
+        const getTrail = async () => {
+            var url = '/event/trail/';
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            return await response.json();
+        }
+        const getLogins = async () => {
+            var url = '/event/logins/';
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            return await response.json();
+        }
+        const getLogs = async () => {
+            var url = '/event/logs/';
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            return await response.json();
+        }
+        const downloadLog = (id) => {
+            var url = '/event/logs/' + id;
+            window.open(url);
+            return;
+        }
+        const subscribe = async () => {
+            var url = '/event/sub';
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            return await response.text();
+        }
+        const getEvents = async (index) => {
+            var url = '/event/show/' + index;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            return await response.json();
+        }
+        const unsubscribe = async () => {
+            var url = '/event/unsub';
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            return await response.text();
+        }
+
+        function showMessage(msg, out = 5000) {
+            console.log(msg);
+            $('#dvMsg').html(msg);
+            $('#dvMsg').fadeIn(1000);
+            clearTimeout(hider);
+            hider = setTimeout(function () { $('#dvMsg').fadeOut(1000); }, out);
+        }
+
+        async function refreshTrail() {
+            $("#dvTrail").fadeOut(1000);
+            var data = await getTrail();
+            var table = new Tabulator("#dvTrail", {
+                data: data,
+                layout: "fitDataFill",
+                //responsiveLayout:"hide",
+                pagination: "local",
+                paginationSize: 20,
+                paginationCounter: "rows",
+                columns: [
+                    { title: "Id", field: "Id", formatter: "rownum" },
+                    { title: "Created Date", field: "CreatedDate" },
+                    { title: "Created By", field: "CreatedBy.Name" },
+                    { title: "Action", field: "Action" },
+                    { title: "Section", field: "Section" },
+                    { title: "Display", field: "Display" }
+                ]
+            });
+            $("#dvTrail").hide().fadeIn(1000);
+            return;
+        }
+        async function refreshLogins() {
+            $("#dvLogins").fadeOut(1000);
+            var data = await getLogins();
+            var downloadIcon = function (cell, formatterParams) { //plain text value
+                return "<i class='fa fa-download'></i>";
+            };
+            var table = new Tabulator("#dvLogins", {
+                data: data,
+                layout: "fitDataFill",
+                //responsiveLayout:"hide",
+                pagination: "local",
+                paginationSize: 20,
+                paginationCounter: "rows",
+                columns: [
+                    { title: "Id", field: "Id", formatter: "rownum" },
+                    { title: "UserId", field: "UserId" },
+                    { title: "User Name", field: "UserName" },
+                    { title: "User Full Name", field: "Name" },
+                    { title: "Login Time", field: "LoginTime" },
+                    { title: "Status", field: "Status" },
+                    { title: "Application", field: "Application" },
+                    { title: "Login Type", field: "LoginType" },
+                    { title: "Browser", field: "Browser" },
+                    { title: "SourceIp", field: "SourceIp" }
+                ]
+            });
+            $("#dvLogins").hide().fadeIn(1000);
+            return;
+        }
+        async function refreshLogs() {
+            $("#dvLogs").fadeOut(1000);
+            var data = await getLogs();
+            var downloadIcon = function (cell, formatterParams) { //plain text value
+                return "<i class='fa fa-download'></i>";
+            };
+            var table = new Tabulator("#dvLogs", {
+                data: data,
+                layout: "fitDataFill",
+                //responsiveLayout:"hide",
+                pagination: "local",
+                paginationSize: 20,
+                paginationCounter: "rows",
+                columns: [
+                    { formatter: downloadIcon, width: 40, hozAlign: "center", cellClick: function (e, cell) { downloadLog(cell.getRow().getData().Id) } },
+                    { title: "Id", field: "Id", formatter: "rownum" },
+                    { title: "Id", field: "Id" },
+                    { title: "Last Modified Date", field: "LastModifiedDate" },
+                    { title: "Event Type", field: "EventType" },
+                    { title: "Interval", field: "Interval" },
+                    { title: "Content Type", field: "LogFileContentType" },
+                    { title: "Log File Field Names", field: "LogFileFieldNames" }
+                ]
+            });
+            $("#dvLogs").hide().fadeIn(1000);
+            return;
+        }
+        var eventCounter = 0;
+        async function refreshEvents() {
+            console.log('referehsing: ' + $('#dvEvents .event').length);
+            var data = await getEvents($('#dvEvents .event').length);
+            showMessage(data.length + ' new event(s) received.', 2000);
+            shake('#dvMsg');
+            for (var index = 0; index < data.length; index++) {
+                ++eventCounter
+                var child = "<pre id='pEvnt" + eventCounter + "' class='event m-2 p-2'>";
+                child = child + '<b>' + eventCounter + ' : ' + data[index].channelName + '</b><br/>';
+                child = child + JSON.stringify(data[index]);
+                child = child + "</pre>";
+                child = child.replaceAll(",", ",<br/>");
+                child = child.replaceAll("{", "<br/>{<br/>");
+                child = child.replaceAll("}", "<br/>}<br/>");
+                child = child.replaceAll("<br/><br/>", "<br/>");
+                $('#dvEvents').prepend(child);
+                colorFade('#pEvnt' + eventCounter, '#faf9d9');
+            }
+        }
+        async function subscribeEvents() {
+            showMessage('Subscribing...');
+            var msg = await subscribe();
+            showMessage(msg);
+            startListen();
+        }
+        async function unSubscribeEvents() {
+            stopListen();
+            var msg = await unsubscribe();
+            showMessage(msg);
+        }
+        async function startListen() {
+            refreshEvents();
+            timer = setInterval(refreshEvents, 5000);
+        }
+        async function stopListen() {
+            clearInterval(timer);
+        }
+        function shake(selector, loop = 10) {
+            console.log(selector);
+            $(selector).animate({
+                'margin-left': '-=5px',
+                'margin-right': '+=5px'
+            }, 20, function () {
+                $(selector).animate({
+                    'margin-left': '+=5px',
+                    'margin-right': '-=5px'
+                }, 20, function () {
+                    if (--loop > 0) {
+                        shake(selector, loop);
+                    }
+                });
+            });
+        }
+
+        function colorFade(selector, color) {
+            $(selector).animate({
+                'background-color': color
+            }, 500, function () {
+                $(selector).animate({
+                    'background-color': 'white'
+                }, 3000);
+            });
+        }
+
+        $(document).ready(function () {
+            $('#dvMsg').fadeOut();
+            refreshLogs();
+            refreshLogins();
+            refreshTrail();
+        });
+
+    </script>
+</body>
+
+</html>

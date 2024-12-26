@@ -1,0 +1,21 @@
+{
+  "name": "monitor-events",
+  "version": "1.0.0",
+  "description": "Monitor SF Events",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "aurrehman@salesforce.com",
+  "license": "Proprietary",
+  "dependencies": {
+    "body-parser": "^1.20.1",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "faye": "^1.4.0",
+    "https": "^1.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
+}

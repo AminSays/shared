@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Case Event</title>
+    <meta name="msapplication-TileImage" content="/favicons/mstile-144x144.png">
+    <link rel="icon" href="https://connect.heroku.com/favicon.ico" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.6.3.min.js"
+        integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-color/2.1.2/jquery.color.min.js"
+        integrity="sha512-VjRpiWhUqdNa9bwBV7LnlG8CwsCVPenFyOQTSRTOGHw/tjtME96zthh0Vv9Itf3i8w4CkUrdYaS6+dAt1m1YXQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
+        crossorigin="anonymous"></script>
+    <script src="https://use.fontawesome.com/releases/v5.15.4/js/all.js"
+        integrity="sha384-rOA1PnstxnOBLzCLMcre8ybwbTmemjzdNlILg8O7z1lUkLXozs4DHonlDtnE7fpc"
+        crossorigin="anonymous"></script>
+    <link href="https://unpkg.com/tabulator-tables/dist/css/tabulator.min.css" rel="stylesheet">
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables/dist/js/tabulator.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.2.1/build/global/luxon.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+</head>
+
+<body>
+    <section class="header container-fluid d-flex flex-row align-items-stretch">
+        <img src="/images/heroku-logo-solid-purple.png" alt="Heroku" id="site-logo">
+        <span id="site-title">Case Integration through Event</span>
+    </section>
+    <section class="content container">
+        <div id="dvMsg" class="alert alert-warning" role="alert"></div>
+        <div class="form-group">
+            <div class="alert alert-primary" role="alert">
+                Create/Update Case 
+              </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label mand" for="txtCaseNumber">Case Number</label>
+                    <input class="form-control" type="text" id="txtCaseNumber" placeholder="Case Number" maxlength="10" readonly="true">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label mand" for="txtContactEmail">Contact Email</label>
+                    <input class="form-control" type="email" id="txtContactEmail" placeholder="Contact Email" maxlength="80" >
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label mand" for="ddlOrigin">Origin</label>
+                    <select class="form-control" id="ddlOrigin">
+                        <option>-Select Origin-</option>
+                        <option>Email</option>
+                        <option>Phone</option>
+                        <option>Twitter</option>
+                        <option>Facebook</option>
+                        <option>Chatter</option>
+                        <option>Chatter Answers</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label mand" for="ddlType">Type</label>
+                    <select class="form-control" id="ddlType">
+                        <option>-Select Type-</option>
+                        <option>Problem</option>
+                        <option>Question</option>
+                        <option>Feature Request</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label mand" for="ddlPriority">Priority</label>
+                    <select class="form-control" id="ddlPriority">
+                        <option>-Select Priority-</option>
+                        <option>Low</option>
+                        <option>Medium</option>
+                        <option>High</option>
+                        <option>Critical</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-8">
+                    <label class="form-label mand" for="txtSubject">Subject</label>
+                    <input class="form-control" type="text" id="txtSubject" placeholder="Subject" maxlength="255" >
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-8">
+                    <label class="form-label" for="txtDescription">Description</label>
+                    <textarea class="form-control" id="txtDescription" placeholder="Description"></textarea>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-8 c">
+                    <input type="button" class="btn btn-primary" value="Submit" onclick="return submitCase();">
+                    <input type="button" class="btn btn-secondary" value="Reset">
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="footer mt-4">
+        © 2023 <a href="https://www.salesforce.com/" title="salesforce.com"> Salesforce.com</a> |
+        <a href="https://www.heroku.com/" title="heroku.com">heroku.com</a>
+    </section>
+
+    <script type="text/javascript">
+        var timer, hider;
+        var events = [];
+        var tblEvent;
+        const postCase = async (data) => {
+            var url = '/caseevent/case/';
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                data: JSON.stringify(data),
+            });
+            return await response.json();
+        }
+        async function submitCase(){
+            var errorMessage = "";
+            if($('#txtContactEmail').val().trim().length == 0 ) {
+                errorMessage = errorMessage + "<li>" + "Contact Email is required" +  "</li>";
+            }
+            if($('#ddlOrigin').prop('selectedIndex') == 0 ) {
+                errorMessage = errorMessage + "<li>" + "Origin is required." +  "</li>";
+            }
+            if($('#ddlType').prop('selectedIndex') == 0 ) {
+                errorMessage = errorMessage + "<li>" + "Type is required." +  "</li>";
+            }
+            if($('#ddlPriority').prop('selectedIndex') == 0 ) {
+                errorMessage = errorMessage + "<li>" + "Priority is required." +  "</li>";
+            }
+            if($('#txtSubject').val().trim().length == 0 ) {
+                errorMessage = errorMessage + "<li>" + "Subject is required" +  "</li>";
+            }
+            if(errorMessage.length > 0) {
+                errorMessage = "<b>Please correct validation errors: </b> <br/> <ul>" + errorMessage + "</ul>";
+                showMessage(errorMessage, 'w', 0);
+                return false;
+            }
+            const objCase = {
+                CaseNumber__c: $('#txtCaseNumber').val().trim(),
+                Contact_Email__c: $('#txtContactEmail').val().trim(),
+                Case_Origin__c: $('#ddlOrigin').val().trim(),
+                Type__c: $('#ddlType').val().trim(),
+                Priority__c: $('#ddlPriority').val().trim(),
+                Subject__c: $('#txtSubject').val().trim(),
+                Description__c: $('#txtDescription').val().trim()
+            }    
+            console.log(JSON.stringify(objCase));
+            showMessage(JSON.stringify(objCase));
+            return false;
+        }
+        const getLogins = async () => {
+            var url = '/event/logins/';
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            return await response.json();
+        }
+        const getLogs = async () => {
+            var url = '/event/logs/';
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            return await response.json();
+        }
+        const downloadLog = (id) => {
+            var url = '/event/logs/' + id;
+            window.open(url);
+            return;
+        }
+        const subscribe = async () => {
+            var url = '/event/sub';
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            return await response.text();
+        }
+        const getEvents = async (index) => {
+            var url = '/event/show/' + index;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            return await response.json();
+        }
+        const unsubscribe = async () => {
+            var url = '/event/unsub';
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            return await response.text();
+        }
+
+        function showMessage(msg, type, out = 5000) {
+            if(type = 'w' && ! $('#dvMsg').hasClass('alert-danger')) {
+                $('#dvMsg').addClass('alert-danger');    
+            }
+            else {
+                $('#dvMsg').removeClass('alert-danger');
+            }
+
+            $('#dvMsg').html(msg);
+            $('#dvMsg').fadeIn(1000);
+            clearTimeout(hider);
+            if(out > 0 ) {
+                hider = setTimeout(function () { $('#dvMsg').fadeOut(1000); }, out);
+            }
+        }
+
+        async function refreshTrail() {
+            $("#dvTrail").fadeOut(1000);
+            var data = await getTrail();
+            var table = new Tabulator("#dvTrail", {
+                data: data,
+                layout: "fitDataFill",
+                //responsiveLayout:"hide",
+                pagination: "local",
+                paginationSize: 20,
+                paginationCounter: "rows",
+                columns: [
+                    { title: "Id", field: "Id", formatter: "rownum" },
+                    { title: "Created Date", field: "CreatedDate" },
+                    { title: "Created By", field: "CreatedBy.Name" },
+                    { title: "Action", field: "Action" },
+                    { title: "Section", field: "Section" },
+                    { title: "Display", field: "Display" }
+                ]
+            });
+            $("#dvTrail").hide().fadeIn(1000);
+            return;
+        }
+        async function refreshLogins() {
+            $("#dvLogins").fadeOut(1000);
+            var data = await getLogins();
+            var downloadIcon = function (cell, formatterParams) { //plain text value
+                return "<i class='fa fa-download'></i>";
+            };
+            var table = new Tabulator("#dvLogins", {
+                data: data,
+                layout: "fitDataFill",
+                //responsiveLayout:"hide",
+                pagination: "local",
+                paginationSize: 20,
+                paginationCounter: "rows",
+                columns: [
+                    { title: "Id", field: "Id", formatter: "rownum" },
+                    { title: "UserId", field: "UserId" },
+                    { title: "User Name", field: "UserName" },
+                    { title: "User Full Name", field: "Name" },
+                    { title: "Login Time", field: "LoginTime" },
+                    { title: "Status", field: "Status" },
+                    { title: "Application", field: "Application" },
+                    { title: "Login Type", field: "LoginType" },
+                    { title: "Browser", field: "Browser" },
+                    { title: "SourceIp", field: "SourceIp" }
+                ]
+            });
+            $("#dvLogins").hide().fadeIn(1000);
+            return;
+        }
+        async function refreshLogs() {
+            $("#dvLogs").fadeOut(1000);
+            var data = await getLogs();
+            var downloadIcon = function (cell, formatterParams) { //plain text value
+                return "<i class='fa fa-download'></i>";
+            };
+            var table = new Tabulator("#dvLogs", {
+                data: data,
+                layout: "fitDataFill",
+                //responsiveLayout:"hide",
+                pagination: "local",
+                paginationSize: 20,
+                paginationCounter: "rows",
+                columns: [
+                    { formatter: downloadIcon, width: 40, hozAlign: "center", cellClick: function (e, cell) { downloadLog(cell.getRow().getData().Id) } },
+                    { title: "Id", field: "Id", formatter: "rownum" },
+                    { title: "Id", field: "Id" },
+                    { title: "Last Modified Date", field: "LastModifiedDate" },
+                    { title: "Event Type", field: "EventType" },
+                    { title: "Interval", field: "Interval" },
+                    { title: "Content Type", field: "LogFileContentType" },
+                    { title: "Log File Field Names", field: "LogFileFieldNames" }
+                ]
+            });
+            $("#dvLogs").hide().fadeIn(1000);
+            return;
+        }
+        var eventCounter = 0;
+        async function refreshEvents() {
+            console.log('referehsing: ' + $('#dvEvents .event').length);
+            var data = await getEvents($('#dvEvents .event').length);
+            showMessage(data.length + ' new event(s) received.', 2000);
+            shake('#dvMsg');
+            for (var index = 0; index < data.length; index++) {
+                ++eventCounter
+                var child = "<pre id='pEvnt" + eventCounter + "' class='event m-2 p-2'>";
+                child = child + '<b>' + eventCounter + ' : ' + data[index].channelName + '</b><br/>';
+                child = child + JSON.stringify(data[index]);
+                child = child + "</pre>";
+                child = child.replaceAll(",", ",<br/>");
+                child = child.replaceAll("{", "<br/>{<br/>");
+                child = child.replaceAll("}", "<br/>}<br/>");
+                child = child.replaceAll("<br/><br/>", "<br/>");
+                $('#dvEvents').prepend(child);
+                colorFade('#pEvnt' + eventCounter, '#faf9d9');
+            }
+        }
+        async function subscribeEvents() {
+            showMessage('Subscribing...');
+            var msg = await subscribe();
+            showMessage(msg);
+            startListen();
+        }
+        async function unSubscribeEvents() {
+            stopListen();
+            var msg = await unsubscribe();
+            showMessage(msg);
+        }
+        async function startListen() {
+            refreshEvents();
+            timer = setInterval(refreshEvents, 5000);
+        }
+        async function stopListen() {
+            clearInterval(timer);
+        }
+        function shake(selector, loop = 10) {
+            console.log(selector);
+            $(selector).animate({
+                'margin-left': '-=5px',
+                'margin-right': '+=5px'
+            }, 20, function () {
+                $(selector).animate({
+                    'margin-left': '+=5px',
+                    'margin-right': '-=5px'
+                }, 20, function () {
+                    if (--loop > 0) {
+                        shake(selector, loop);
+                    }
+                });
+            });
+        }
+
+        function colorFade(selector, color) {
+            $(selector).animate({
+                'background-color': color
+            }, 500, function () {
+                $(selector).animate({
+                    'background-color': 'white'
+                }, 3000);
+            });
+        }
+
+        $(document).ready(function () {
+            $('#dvMsg').fadeOut();
+            //refreshLogs();
+            //refreshLogins();
+            //refreshTrail();
+        });
+
+    </script>
+</body>
+
+</html>
